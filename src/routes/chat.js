@@ -11,8 +11,8 @@ chatRouter.post('/chat', async (req, res) => {
   }
 
   try {
-    const result = await answerQuestion(message);
-    res.json(result);
+    const { answer, handoff } = await answerQuestion(message);
+    res.json({ answer, handoff });
   } catch (err) {
     console.error('Error answering question:', err);
     res.status(500).json({ error: 'Failed to generate an answer.' });
