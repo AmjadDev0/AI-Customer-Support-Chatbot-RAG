@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "ingest": "node src/scripts/ingest.js"
+    "ingest": "node src/ingestDocs.js"
   },
   "keywords": [
     "rag",
