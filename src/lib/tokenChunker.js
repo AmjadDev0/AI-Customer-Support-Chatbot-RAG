@@ -36,12 +36,3 @@ export function chunkByTokens(
 
   return chunks;
 }
-
-/**
- * Count the number of tokens in a string.
- * @param {string} text
- * @returns {number}
- */
-export function countTokens(text) {
-  return encoder.encode(text).length;
-}

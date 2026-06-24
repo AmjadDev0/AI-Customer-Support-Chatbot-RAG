@@ -28,7 +28,7 @@ Express app.
 
 **Two phases:**
 
-1. **Ingestion** (`src/ingestDocs.js`) — runs once (or whenever docs change):
+1. **Ingestion** (`src/services/ingest.js`) — runs once (or whenever docs change):
    load documents → token-chunk → embed → upsert into ChromaDB. Each chunk gets a
    deterministic content-hash ID so re-running is safe and won't duplicate data.
 2. **Query** (`src/services/chat.js`) — per request: embed the question →
@@ -46,16 +46,16 @@ support-chatbot/
 │   ├── config/
 │   │   └── index.js        # Loads .env, validates secrets, model defaults
 │   ├── lib/
-│   │   ├── openai.js       # OpenAI client + embed() / chat helpers
+│   │   ├── openai.js       # OpenAI client + embed() helper
 │   │   ├── chroma.js       # ChromaDB client + collection
-│   │   ├── tokenChunker.js # Token-based chunking (js-tiktoken)
-│   │   ├── chunker.js      # (legacy char-based chunker)
-│   │   └── loader.js       # PDF/text loaders
+│   │   └── tokenChunker.js # Token-based chunking (js-tiktoken)
 │   ├── services/
-│   │   └── chat.js         # answerQuestion(): retrieve + generate + handoff
+│   │   ├── chat.js         # answerQuestion(): retrieve + generate + handoff
+│   │   └── ingest.js       # ingestDocs(): load + token-chunk + embed + upsert
 │   ├── routes/
 │   │   └── chat.js         # POST /chat handler
-│   ├── ingestDocs.js       # Ingestion entry point (npm run ingest)
+│   ├── scripts/
+│   │   └── ingest.js       # Ingestion entry point (npm run ingest)
 │   └── server.js           # Express app: API + static frontend
 ├── .env.example
 ├── .gitignore
@@ -64,7 +64,7 @@ support-chatbot/
 
 ## Requirements
 
-- **Node.js >= 18**
+- **Node.js >= 20.16**
 - An **OpenAI API key**
 - A running **ChromaDB** instance (local, via Docker)
 
@@ -98,14 +98,20 @@ Then open **http://localhost:3000** to use the chat widget.
 All configuration is read from environment variables (see `.env.example`). No
 secrets are hardcoded.
 
-| Variable         | Required | Default                 | Description                     |
-| ---------------- | -------- | ----------------------- | ------------------------------- |
-| `OPENAI_API_KEY` | ✅ yes   | —                       | OpenAI API key for embeddings + chat |
-| `PORT`           | no       | `3000`                  | HTTP port for the Express server |
-| `CHROMA_URL`     | no       | `http://localhost:8000` | ChromaDB server URL             |
+| Variable             | Required | Default                  | Description                          |
+| -------------------- | -------- | ------------------------ | ------------------------------------ |
+| `OPENAI_API_KEY`     | ✅ yes   | —                        | OpenAI API key for embeddings + chat |
+| `PORT`               | no       | `3000`                   | HTTP port for the Express server     |
+| `CHROMA_URL`         | no       | `http://localhost:8000`  | ChromaDB server URL                  |
+| `OPENAI_EMBED_MODEL` | no       | `text-embedding-3-small` | Embedding model                      |
+| `OPENAI_CHAT_MODEL`  | no       | `gpt-4o-mini`            | Chat completion model                |
+| `CHROMA_COLLECTION`  | no       | `support-docs`           | ChromaDB collection name             |
+| `CHUNK_TOKENS`       | no       | `500`                    | Tokens per chunk during ingestion    |
+| `CHUNK_OVERLAP`      | no       | `50`                     | Token overlap between chunks         |
+| `TOP_K`              | no       | `4`                      | Chunks retrieved per question        |
 
-Model and chunking defaults (`text-embedding-3-small`, `gpt-4o-mini`, chunk
-sizes, `topK`) live in `src/config/index.js`.
+All defaults live in `src/config/index.js` and can be overridden via the
+environment variables above.
 
 ## API
 
@@ -137,7 +143,13 @@ When the answer isn't found in the knowledge base:
 
 ### `GET /health`
 
-Returns `{ "status": "ok" }`.
+Returns:
+
+```json
+{
+  "status": "ok" 
+}
+```
 
 ## Scripts
 

@@ -1,17 +1,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { ingestDirectory } from '../services/ingest.js';
+import { ingestDocs } from '../services/ingest.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const dataDir = path.resolve(__dirname, '../../data');
 
-async function main() {
-  console.log(`Ingesting documents from ${dataDir} ...`);
-  const { documents, chunks } = await ingestDirectory(dataDir);
-  console.log(`Done. Ingested ${chunks} chunks from ${documents} document(s).`);
-}
+// Project-root /docs folder (../../docs relative to src/scripts/).
+const DOCS_DIR = path.resolve(__dirname, '../../docs');
 
-main().catch((err) => {
-  console.error('Ingestion failed:', err);
+ingestDocs(DOCS_DIR).catch((err) => {
+  console.error('[ingest] failed:', err);
   process.exit(1);
 });

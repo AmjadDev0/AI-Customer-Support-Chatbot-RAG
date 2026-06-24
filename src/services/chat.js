@@ -36,14 +36,15 @@ export async function answerQuestion(question) {
     );
   }
 
-  // 1. Embed the question and retrieve the top 4 most relevant chunks.
+  // 1. Embed the question and retrieve the top-K most relevant chunks.
   const [queryEmbedding] = await embed(question);
 
   let results;
   try {
     results = await collection.query({
       queryEmbeddings: [queryEmbedding],
-      nResults: 4,
+      nResults: config.topK,
+      include: ['documents', 'metadatas'],
     });
   } catch (err) {
     throw new Error(`ChromaDB query failed: ${err.message}`, { cause: err });
