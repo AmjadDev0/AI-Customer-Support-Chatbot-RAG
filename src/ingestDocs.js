@@ -44,10 +44,18 @@ async function embedBatched(texts) {
     console.log(
       `  → embedding ${i + 1}-${i + batch.length} of ${texts.length} chunks`,
     );
-    const response = await openai.embeddings.create({
-      model: config.embeddingModel, // text-embedding-3-small
-      input: batch,
-    });
+    let response;
+    try {
+      response = await openai.embeddings.create({
+        model: config.embeddingModel, // text-embedding-3-small
+        input: batch,
+      });
+    } catch (err) {
+      throw new Error(
+        `OpenAI embeddings request failed (batch starting at ${i}): ${err.message}`,
+        { cause: err },
+      );
+    }
     for (const item of response.data) vectors.push(item.embedding);
   }
   return vectors;
@@ -131,12 +139,16 @@ export async function ingestDocs(docsDir = DOCS_DIR) {
 
   const embeddings = await embedBatched(toEmbed.map((c) => c.text));
 
-  await collection.upsert({
-    ids: toEmbed.map((c) => c.id),
-    embeddings,
-    documents: toEmbed.map((c) => c.text),
-    metadatas: toEmbed.map((c) => ({ source: c.source })),
-  });
+  try {
+    await collection.upsert({
+      ids: toEmbed.map((c) => c.id),
+      embeddings,
+      documents: toEmbed.map((c) => c.text),
+      metadatas: toEmbed.map((c) => ({ source: c.source })),
+    });
+  } catch (err) {
+    throw new Error(`ChromaDB upsert failed: ${err.message}`, { cause: err });
+  }
 
   console.log(
     `[ingest] done — upserted ${toEmbed.length} chunk(s) into "${config.collectionName}".`,

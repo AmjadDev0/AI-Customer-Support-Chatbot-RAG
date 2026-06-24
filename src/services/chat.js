@@ -26,14 +26,28 @@ const SYSTEM_PROMPT = [
  * @returns {Promise<{ answer: string, handoff: boolean, sources: string[] }>}
  */
 export async function answerQuestion(question) {
-  const collection = await getCollection();
+  let collection;
+  try {
+    collection = await getCollection();
+  } catch (err) {
+    throw new Error(
+      `Could not connect to ChromaDB at ${config.chromaUrl}: ${err.message}`,
+      { cause: err },
+    );
+  }
 
   // 1. Embed the question and retrieve the top 4 most relevant chunks.
   const [queryEmbedding] = await embed(question);
-  const results = await collection.query({
-    queryEmbeddings: [queryEmbedding],
-    nResults: 4,
-  });
+
+  let results;
+  try {
+    results = await collection.query({
+      queryEmbeddings: [queryEmbedding],
+      nResults: 4,
+    });
+  } catch (err) {
+    throw new Error(`ChromaDB query failed: ${err.message}`, { cause: err });
+  }
 
   const documents = results.documents?.[0] ?? [];
   const metadatas = results.metadatas?.[0] ?? [];
@@ -49,17 +63,24 @@ export async function answerQuestion(question) {
     .join('\n\n');
 
   // 3. Ask the model to answer strictly from the context.
-  const response = await openai.chat.completions.create({
-    model: config.chatModel,
-    temperature: 0,
-    messages: [
-      { role: 'system', content: SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: `Context:\n${context}\n\nQuestion: ${question}`,
-      },
-    ],
-  });
+  let response;
+  try {
+    response = await openai.chat.completions.create({
+      model: config.chatModel,
+      temperature: 0,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        {
+          role: 'user',
+          content: `Context:\n${context}\n\nQuestion: ${question}`,
+        },
+      ],
+    });
+  } catch (err) {
+    throw new Error(`OpenAI chat request failed: ${err.message}`, {
+      cause: err,
+    });
+  }
 
   const answer = response.choices[0].message.content.trim();
   const handoff = answer === HANDOFF_MESSAGE;
