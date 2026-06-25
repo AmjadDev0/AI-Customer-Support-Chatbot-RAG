@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice">
+  <g fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.5">
+    <polyline points="120,140 320,90 470,220 300,330 120,140" />
+    <polyline points="1100,120 1280,210 1220,400 1010,330 1100,120" />
+    <polyline points="980,560 1180,620 1320,520" />
+    <polyline points="160,560 360,640 520,560 640,690" />
+  </g>
+  <g fill="#ffffff" fill-opacity="0.65">
+    <circle cx="120" cy="140" r="3" /><circle cx="320" cy="90" r="3" />
+    <circle cx="470" cy="220" r="3" /><circle cx="300" cy="330" r="3" />
+    <circle cx="1100" cy="120" r="3" /><circle cx="1280" cy="210" r="3" />
+    <circle cx="1220" cy="400" r="3" /><circle cx="1010" cy="330" r="3" />
+    <circle cx="980" cy="560" r="3" /><circle cx="1180" cy="620" r="3" />
+    <circle cx="1320" cy="520" r="3" /><circle cx="160" cy="560" r="3" />
+    <circle cx="360" cy="640" r="3" /><circle cx="520" cy="560" r="3" />
+    <circle cx="640" cy="690" r="3" />
+  </g>
+</svg>
